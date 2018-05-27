@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Pragma Pager</title>
+        <link rel="import" href="./pragmaPager.html"/>
+        <style>
+            pragma-pager {
+                display: flex;
+                flex-wrap: wrap;
+            }
+            pager-button {
+                padding: 20px;
+                cursor: pointer;
+            }
+            pager-button:focus {
+                outline:none;
+            }
+            pager-button:hover {
+                background: rgba(240,242,245);
+            }
+            pager-button[aria-selected="true"] {
+                background: rgba(207,210,217);
+                border-bottom: 2px solid rgba(255,209,45);
+                font-weight: 600;
+            }
+            .page-container {
+                display: flex;
+                flex-wrap: wrap;
+            }
+            .tabsheet-page {
+                padding: 20px;
+            }
+        </style>
+    </head>
+    <body>
+        <pragma-pager behaviour="single-page">
+            <pager-button class="tabsheet-button" aria-controls="page-1" slot="pager-button">Tab 1</pager-button>
+            <pager-button class="tabsheet-button" aria-controls="page-2" slot="pager-button">Tab 2</pager-button>
+            <pager-button class="tabsheet-button" aria-controls="page-3" slot="pager-button">Tab 3</pager-button>
+        </pragma-pager>
+
+        <div class="page-container">
+            <div role="tabpanel" class="tabsheet-page" id="page-1">Tab 1 Content</div>
+            <div role="tabpanel" class="tabsheet-page" id="page-2">Tab 2 Content</div>
+            <div role="tabpanel" class="tabsheet-page" id="page-3">Tab 3 Content</div>
+        </div>
+    </body>
+</html>

@@ -1,0 +1,124 @@
+<template id="pragma-pager">
+    <slot name="pager-button"></slot>
+</template>
+
+<script>
+    class PragmaPager extends HTMLElement {
+        constructor() {
+            super();
+        }
+
+        allPagerButtons() {
+            return Array.from(this.querySelectorAll('pager-button'));
+        }
+        
+        allPages() {
+            return this.allPagerButtons().map(pagerButton => { return document.getElementById(pagerButton.getAttribute('aria-controls')); });
+        }
+
+        click(event) {
+            if (event.target.getAttribute('role') !== 'tab') {
+                return;
+            }
+            this.selectPage(event.target);
+        }
+
+        connectedCallback() {
+            this.initializeTemplate();
+
+            if (!this.hasAttribute('role')) {
+                this.setAttribute('role', 'tablist');
+            }
+
+            for(const page of this.allPages()) {
+                if (!page.hasAttribute('role')) {
+                    page.setAttribute('role', 'tabpanel');
+                }
+                if (!page.hasAttribute('tabindex')) {
+                    page.setAttribute('tabindex', 0);
+                }
+            }
+
+            this.clickHandler = this.click.bind(this);
+            this.addEventListener("click", this.clickHandler);
+        }
+
+        disconnectedCallback() {
+            this.behaviour = null;
+            this.removeEventListener("click", this.clickHandler);
+            this.clickHandler = null;
+        }
+
+        initializeTemplate() {
+            this.attachShadow({mode: 'open'});
+            const template = document.currentScript.ownerDocument.getElementById("pragma-pager");
+            this.shadowRoot.appendChild(template.content.cloneNode(true));
+
+            this.behaviour = this.getAttribute('behaviour') || "single-page";            
+            this.linkPages();
+        }
+
+        linkPages() {
+            const pagerButtons = this.allPagerButtons();
+            for(const pagerButton of pagerButtons) {
+                const targetId = pagerButton.getAttribute('aria-controls');
+                const page = this.allPages().find(page => page.id === targetId);
+
+                if (page == undefined) {
+                    console.error(`Page with Id: ${targetId} could not be found.`);
+                }
+
+                page.setAttribute('aria-labelledby', pagerButton.id);
+            }
+            const selectedPagerButton = pagerButtons.find(pagerButton => pagerButton.selected) || pagerButtons[0];
+            this.selectPage(selectedPagerButton);
+        }
+
+        reset() {
+            const activePagerButtons = this.allPagerButtons().filter(pagerButton => pagerButton.getAttribute('aria-selected') == 'true');
+            for(const pagerButton of activePagerButtons) {
+                pagerButton.setAttribute('aria-selected', 'false');
+                pagerButton.setAttribute('tabindex', -1);
+            }
+
+            const activePages = this.allPages().filter(page => (page.getAttribute('aria-hidden') || 'false') == 'false');
+            for(const page of activePages) {
+                page.hidden = true;
+                page.setAttribute('aria-hidden', page.hidden);
+            }
+        }
+
+        selectPage(pagerButton) {
+            this.reset();
+            const page = this.allPages().find(page => page.id === pagerButton.getAttribute('aria-controls'));
+
+            if (!page) {
+                console.error(`No page element with attribute aria-controls of ${pagerButton.getAttribute('aria-controls')} could be found.`);
+            }
+
+            pagerButton.setAttribute('aria-selected','true');
+            pagerButton.setAttribute('tabindex', 0);
+            page.hidden = false;
+            page.setAttribute('aria-hidden', page.hidden);
+            pagerButton.focus();
+        }
+    }
+
+    customElements.define('pragma-pager', PragmaPager);
+
+    class PagerButton extends HTMLElement {
+        constructor() {
+            super();
+        }
+
+        connectedCallback() {
+            const index = this.parentNode.allPagerButtons().indexOf(this) || 0;
+            const targetId = this.getAttribute('aria-controls');
+            this.id = `${index}-${targetId}`;
+            this.setAttribute('role', 'tab');
+            this.setAttribute('tabindex', -1);
+        }
+    }
+
+    customElements.define('pager-button', PagerButton);
+</script>
